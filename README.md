@@ -23,6 +23,7 @@ JavaScript (ES6) —  logic & interactivity
 
 📂 Project Structure
 
-├── index.html
-├── style.css
-└── script.js
+├── index.html   
+├── style.css    
+└── script.js    
+
