@@ -12,6 +12,7 @@
   const filterButtons = document.querySelectorAll(".filter-btn");
   const sortSelect = document.getElementById("sortBy");
   const searchInput = document.getElementById("searchInput");
+  const themeToggle = document.getElementById("themeToggle");
 
   const totalTasksEl = document.getElementById("totalTasks");
   const pendingTasksEl = document.getElementById("pendingTasks");
@@ -41,11 +42,36 @@
   let deleteTaskId = null;
 
   const STORAGE_KEY = "todo_tasks_v1";
+  const THEME_KEY = "todo_theme_v1";
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem(THEME_KEY) || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    updateThemeIcon(savedTheme);
+  }
+
+  function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector("i");
+    icon.className = theme === "dark" ? "fas fa-sun" : "fas fa-moon";
+  }
+
+  function toggleTheme() {
+    const currentTheme =
+      document.documentElement.getAttribute("data-theme") || "light";
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem(THEME_KEY, newTheme);
+    updateThemeIcon(newTheme);
+  }
 
   function loadTasks() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       tasks = raw ? JSON.parse(raw) : [];
+      // Ensure completed property is boolean
+      tasks.forEach((task) => {
+        task.completed = Boolean(task.completed);
+      });
     } catch (e) {
       tasks = [];
     }
@@ -107,6 +133,7 @@
       )
         return false;
     }
+
     switch (currentFilter) {
       case "pending":
         return !task.completed;
@@ -239,6 +266,8 @@
     render();
   });
 
+  themeToggle.addEventListener("click", toggleTheme);
+
   clearCompletedBtn.addEventListener("click", () => {
     tasks = tasks.filter((t) => !t.completed);
     saveTasks();
@@ -264,28 +293,44 @@
     const taskItem = e.target.closest(".task-item");
     if (!taskItem) return;
     const id = taskItem.dataset.id;
+
+    // Handle checkbox clicks
     if (e.target.matches(".task-checkbox")) {
       const task = tasks.find((t) => t.id === id);
       if (task) {
-        task.completed = e.target.checked;
+        task.completed = Boolean(e.target.checked);
         saveTasks();
         render();
       }
       return;
     }
-    if (e.target.closest('[data-action="edit"]')) {
+
+    // Handle edit button clicks (button or icon inside it)
+    const editBtn = e.target.closest('.edit-btn, [data-action="edit"]');
+    if (editBtn) {
+      e.preventDefault();
+      e.stopPropagation();
       openEditModal(id);
       return;
     }
-    if (e.target.closest('[data-action="delete"]')) {
+
+    // Handle delete button clicks (button or icon inside it)
+    const deleteBtn = e.target.closest('.delete-btn, [data-action="delete"]');
+    if (deleteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
       openDeleteConfirm(id);
       return;
     }
   });
 
   function openEditModal(id) {
+    console.log("Opening edit modal for task ID:", id);
     const task = tasks.find((t) => t.id === id);
-    if (!task) return;
+    if (!task) {
+      console.error("Task not found:", id);
+      return;
+    }
     editTaskId = id;
     editTaskTitle.value = task.title;
     editTaskDescription.value = task.description || "";
@@ -297,8 +342,14 @@
   }
 
   function openDeleteConfirm(id) {
+    console.log("Opening delete confirmation for task ID:", id);
+    const task = tasks.find((t) => t.id === id);
+    if (!task) {
+      console.error("Task not found:", id);
+      return;
+    }
     deleteTaskId = id;
-    confirmMessage.textContent = "Are you sure you want to delete this task?";
+    confirmMessage.textContent = `Are you sure you want to delete "${task.title}"?`;
     showModal(confirmModal);
   }
 
@@ -338,6 +389,12 @@
   function hideModal(modal) {
     modal.classList.remove("active");
     document.body.style.overflow = "";
+    if (modal === editModal) {
+      editTaskId = null;
+    }
+    if (modal === confirmModal) {
+      deleteTaskId = null;
+    }
   }
 
   window.addEventListener("keydown", (e) => {
@@ -353,6 +410,7 @@
     });
   });
 
+  initTheme();
   loadTasks();
   render();
 })();
