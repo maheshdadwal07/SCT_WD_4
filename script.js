@@ -68,7 +68,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       tasks = raw ? JSON.parse(raw) : [];
-      // Ensure completed property is boolean
+      
       tasks.forEach((task) => {
         task.completed = Boolean(task.completed);
       });
@@ -108,7 +108,7 @@
     if (!dt) return false;
     const diff = dt.getTime() - Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
-    return diff > 0 && diff <= oneDay; // within next 24h
+    return diff > 0 && diff <= oneDay; 
   }
 
   function updateStats() {
@@ -161,7 +161,7 @@
       if (sortBy === "alphabetical") {
         return a.title.localeCompare(b.title);
       }
-      return a.createdAt - b.createdAt; // dateCreated
+      return a.createdAt - b.createdAt; 
     });
   }
 
@@ -294,7 +294,6 @@
     if (!taskItem) return;
     const id = taskItem.dataset.id;
 
-    // Handle checkbox clicks
     if (e.target.matches(".task-checkbox")) {
       const task = tasks.find((t) => t.id === id);
       if (task) {
@@ -305,7 +304,6 @@
       return;
     }
 
-    // Handle edit button clicks (button or icon inside it)
     const editBtn = e.target.closest('.edit-btn, [data-action="edit"]');
     if (editBtn) {
       e.preventDefault();
@@ -314,7 +312,6 @@
       return;
     }
 
-    // Handle delete button clicks (button or icon inside it)
     const deleteBtn = e.target.closest('.delete-btn, [data-action="delete"]');
     if (deleteBtn) {
       e.preventDefault();
